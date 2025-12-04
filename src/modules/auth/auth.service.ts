@@ -1,7 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+
+interface JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -9,15 +15,24 @@ export class AuthService {
 
   async validateUser(email: string, pass: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (user && (await bcrypt.compare(pass, user.password))) {
-      const { password, ...rest } = user;
-      return rest;
-    }
-    return null;
+    if (!user) return null;
+
+    const isValid = await bcrypt.compare(pass, user.password);
+    if (!isValid) return null;
+
+    // password を除外（unused-vars の警告を防ぐ）
+    const { password: _password, ...safeUser } = user;
+    void _password; // ESLint が unused だと判断しないようにする
+    return safeUser;
   }
 
-  async login(user: any) {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+  async login(user: { id: string; email: string; role: string }) {
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
     return {
       accessToken: this.jwt.sign(payload),
       refreshToken: 'TODO-refresh-token',
@@ -26,9 +41,18 @@ export class AuthService {
 
   async signup(data: { email: string; password: string; name?: string }) {
     const hashed = await bcrypt.hash(data.password, 10);
+
     const user = await this.prisma.user.create({
-      data: { email: data.email, password: hashed, name: data.name },
+      data: {
+        email: data.email,
+        password: hashed,
+        name: data.name,
+      },
     });
-    return { id: user.id, email: user.email };
+
+    return {
+      id: user.id,
+      email: user.email,
+    };
   }
 }
