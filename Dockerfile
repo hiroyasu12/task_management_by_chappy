@@ -9,9 +9,11 @@ RUN apt-get update && apt-get install -y \
     openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# package.json のみコピーし、依存インストール
-COPY package*.json ./
-RUN npm install
+# package.json / lock をコピー（キャッシュの肝）
+COPY package.json package-lock.json ./
+
+# 依存インストール（devDependencies も含む）
+RUN npm ci
 
 # アプリ全体をコピー
 COPY . .
@@ -36,9 +38,11 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-# package.json のみコピーして production install
-COPY package*.json ./
-RUN npm install --omit=dev
+# package.json と lockfile をコピー
+COPY package.json package-lock.json ./
+
+# production 依存だけインストール
+RUN npm ci --omit=dev
 
 # Prisma schema をコピー（generateに必要）
 COPY --from=builder /app/prisma ./prisma
