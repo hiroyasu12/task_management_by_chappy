@@ -1,16 +1,20 @@
 import { Controller, Post, Body, UseGuards, Get, Param, Put, Delete, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TasksService } from './tasks.service';
+import { TaskCreateDto } from './dto/task-create.dto';
+import { TaskUpdateDto } from './dto/task-update.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('tasks')
+@ApiBearerAuth()   // ←←🔥 Swagger が JWT を自動送信するようになる
 @Controller('tasks')
 export class TasksController {
   constructor(private tasks: TasksService) {}
 
-  // For demo: using Request.user populated by JwtStrategy
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  create(@Request() req: any, @Body() body: any) {
-    return this.tasks.create(req.user.userId, body);
+  create(@Request() req: any, @Body() dto: TaskCreateDto) {
+    return this.tasks.create(req.user.userId, dto);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -27,8 +31,8 @@ export class TasksController {
 
   @UseGuards(AuthGuard('jwt'))
   @Put(':id')
-  update(@Request() req: any, @Param('id') id: string, @Body() body: any) {
-    return this.tasks.update(req.user.userId, id, body);
+  update(@Request() req: any, @Param('id') id: string, @Body() dto: TaskUpdateDto) {
+    return this.tasks.update(req.user.userId, id, dto);
   }
 
   @UseGuards(AuthGuard('jwt'))
