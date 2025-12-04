@@ -4,6 +4,11 @@ import { TasksService } from './tasks.service';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Request as ExpressRequest } from 'express';
+
+interface AuthRequest extends ExpressRequest {
+  user: { userId: string };
+}
 
 @ApiTags('tasks')
 @ApiBearerAuth()   // ←←🔥 Swagger が JWT を自動送信するようになる
@@ -13,31 +18,31 @@ export class TasksController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  create(@Request() req: any, @Body() dto: TaskCreateDto) {
+  create(@Request() req: AuthRequest, @Body() dto: TaskCreateDto) {
     return this.tasks.create(req.user.userId, dto);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Get()
-  findAll(@Request() req: any) {
+  findAll(@Request() req: AuthRequest) {
     return this.tasks.findAll(req.user.userId);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Get(':id')
-  findOne(@Request() req: any, @Param('id') id: string) {
+  findOne(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.tasks.findOne(req.user.userId, id);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Put(':id')
-  update(@Request() req: any, @Param('id') id: string, @Body() dto: TaskUpdateDto) {
+  update(@Request() req: AuthRequest, @Param('id') id: string, @Body() dto: TaskUpdateDto) {
     return this.tasks.update(req.user.userId, id, dto);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  remove(@Request() req: any, @Param('id') id: string) {
+  remove(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.tasks.remove(req.user.userId, id);
   }
 }

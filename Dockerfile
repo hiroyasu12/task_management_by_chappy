@@ -18,6 +18,9 @@ RUN npm ci
 # アプリ全体をコピー
 COPY . .
 
+# ---- Lint (CI でエラー検出するため) ----
+RUN npm run lint
+
 # Prisma Client を生成（Debian 環境で生成することが超重要）
 RUN npx prisma generate
 
