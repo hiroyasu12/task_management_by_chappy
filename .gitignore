@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.*
+.vscode
+.DS_Store
+npm-debug.log
+docker-compose.override.yml
+*/.env
+coverage
+.prisma/client
