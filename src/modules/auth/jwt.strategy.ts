@@ -1,16 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-
-interface JwtPayload {
-  sub: string;
-  email: string;
-  role: string;
-}
+import { RedisService } from '../redis/redis.service';
+import { JwtPayload } from './jwt-payload.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private readonly redisService: RedisService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -18,11 +14,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
-    return {
-      userId: payload.sub,
-      email: payload.email,
-      role: payload.role,
-    };
+  async validate(payload: JwtPayload): Promise<JwtPayload> {
+    const client = this.redisService.getClient();
+    const blacklistKey = `blacklist:access:${payload.jti}`;
+    const isBlacklisted = await client.get(blacklistKey);
+
+    if (isBlacklisted) {
+      throw new UnauthorizedException('Token is blacklisted');
+    }
+
+    return payload;
   }
 }
