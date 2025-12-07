@@ -32,9 +32,15 @@ task_management_by_chappy/
 │       │   ├── auth.controller.ts
 │       │   ├── auth.service.ts
 │       │   ├── jwt.strategy.ts
+│       │   ├── jwt-payload.interface.ts
 │       │   └── dto/
 │       │       ├── login.dto.ts
-│       │       └── signup.dto.ts
+│       │       ├── signup.dto.ts
+│       │       ├── refresh.dto.ts
+│       │       └── logout.dto.ts
+│       │
+│       ├── redis/
+│       │   └── redis.service.ts
 │       │
 │       ├── tasks/
 │       │   ├── tasks.controller.ts
@@ -108,7 +114,7 @@ docker compose up --build
 
 ## 4️⃣ Apply Prisma migrations（初回のみ必要）
 
-初回はデータベースが空のため、別端末でtask_management_by_chappyにてマイグレーションを適用します：
+初回はデータベースが空のため、task_management_by_chappyにてマイグレーションを適用します：
 ```bash
 docker compose exec app npx prisma migrate deploy
 ```
@@ -173,7 +179,7 @@ Swagger の “Authorize” で次の形式で JWT をセット：
 Swagger の Authorize に貼り付け：
 
 ```text
-Bearer xxxxx.yyyyy.zzzzz
+xxxxx.yyyyy.zzzzz
 ```
 
 ---
@@ -191,7 +197,31 @@ Bearer xxxxx.yyyyy.zzzzz
 
 ---
 
-## 4. Other Task Operations
+## 4. Refresh Token（再発行）
+
+**POST /auth/refresh**
+
+```json
+{
+  "refreshToken": "your-refresh-token"
+}
+```
+
+---
+
+## 5. Logout（Access Token Blacklist + Refresh Token 無効化）
+
+**POST /auth/logout**
+
+```json
+{
+  "refreshToken": "your-refresh-token"
+}
+```
+
+---
+
+## 6. Other Task Operations
 
 | Method | Endpoint      | Description      |
 |--------|---------------|------------------|
