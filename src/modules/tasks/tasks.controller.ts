@@ -5,9 +5,10 @@ import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Request as ExpressRequest } from 'express';
+import { JwtPayload } from './../auth/jwt-payload.interface';
 
 interface AuthRequest extends ExpressRequest {
-  user: { userId: string };
+  user: JwtPayload;
 }
 
 @ApiTags('tasks')
